@@ -4,9 +4,6 @@ import plotly.express as px
 
 from utils import create_snowflake_connector, DbtProfiles
 
-
-## Delete
-
 ## GET DATA
 
 
