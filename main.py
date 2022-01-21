@@ -1,63 +1,19 @@
+# Import libraries
+from functions import set_title
 
+# Custom imports
+from functions.multipage import MultiPage
+from pages import health_check, upload_data, visualize_data
 
+set_title.set()
 
+# Create an instance of the app
+app = MultiPage()
 
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
+# Add applications to navigation pane
+app.add_page("Upload Data", upload_data.app)
+app.add_page("Health Check", health_check.app)
+app.add_page("Visualize Data", visualize_data.app)
 
-## Delete
-import seaborn as sns
-
-## GET DATA
-
-
-def load_data():
-    file_name = 'data/podcasts.csv'
-    title = file_name.split('/')[-1]
-    return title, pd.read_csv(file_name)
-
-
-app_title, df = load_data()
-print(df.columns)
-## DO WORK
-
-list_nulls=[];
-list_colNames=[];
-list_type=[];
-for col in df.columns:
-    list_nulls.append(round(sum(df[col].isna())/df.shape[0]*100,3))
-    list_colNames.append(col)
-    if df[col].dtype == 'int64' or df[col].dtype == 'float64':
-        list_type.append('Num')
-    elif df[col].dtype == 'object':
-        list_type.append('Cat')
-    else:
-        list_type.append(None)
-        print('Unknown data type for ', df[col].dtype)
-
-if len(list_colNames) != len(list_nulls) or len(list_colNames) != len(list_type):
-    print('ERROR, length of column names, null, or type lists do not match')
-else:
-    df_null = pd.DataFrame(
-    {'Percent_Null': list_nulls,
-    'Data_Type': list_type
-    }, index=list_colNames)
-print(df_null)
-
-df_null = df_null.reset_index().rename(columns={"index":"TITLE"})
-
-# create donut chart
-fig=px.pie(df_null, values='Percent_Null', names='TITLE')
-
-
-## Display
-st.title(f"DEAR: {app_title}")
-
-#display donut chart
-st.plotly_chart(fig)
-
-
-
-
+# Triggers run for everything
+app.run()
