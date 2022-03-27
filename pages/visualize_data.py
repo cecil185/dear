@@ -1,17 +1,8 @@
 import os
-import pandas as pd
 import seaborn as sns
 import streamlit as st
-import matplotlib.pyplot as plt
-import numpy as np
-import plotly.express as px
 import plotly.figure_factory as ff
 import pandas as pd
-import math
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
-
-## GET DATA
 
 
 def app():
@@ -32,7 +23,10 @@ def app():
             label="Univariate Distributions", expanded=True
         )
 
+        check_box_list = []
+
         with corr_expander:
+
             # Can add mask to the correlation matrix later so only the bottom half shows
             dfc = df.corr(method="pearson")
             z = dfc.values.tolist()
@@ -56,45 +50,40 @@ def app():
             fig["data"][0]["showscale"] = True
             st.plotly_chart(fig)
 
-        with pair_plots_expander:
-            ## IF NO BOXES CHECKED THEN MULTI
-            st.write("hi")
-            # # Next features - correlation matrix and/or pair plots
-            # if st.sidebar.button("Generate pair plots for checked IDs"):
-            #     features = df.columns[check_box_list]
-            #     fig3 = sns.pairplot(data=df, x_vars=features, y_vars=features)
-            #     st.sidebar.pyplot(fig3, use_container_width=True)  # display distribution
-
         with univariate_expander:
-            # num_cols = 2
-            # fig = make_subplots(
-            #     rows=int(math.ceil(len(df.columns) / num_cols)), cols=num_cols
-            # )
-            # # for i in range(len(df.columns)):
-            # # fig = px.histogram(
-            # #     df,
-            # #     x=df.columns[i],
-            # #     y=df.columns[i],
-            # #     marginal="rug"
-            # #     # hover_data=df.columns,
-            # # )
-            # fig2 = px.histogram(df, x=df.columns[2])
-            #
-            # # sns.displot(data=df, x=df.columns[2], bins=30)
-            # fig.add_trace(go.Histogram(x=df[df.columns[2]]), row=1, col=2)
 
+            # Create title row - 2 columns
             column_widths = [1, 1]
             c1, c2 = st.columns(column_widths)
             c1.subheader("Feature")
             c2.subheader("Distribution")
 
-            check_box_list = []
-            for i in range(0, int(math.floor(len(df.columns) / 2))):
-                # create histogram chart
-                fig2 = sns.displot(data=df, x=df.columns[i], bins=30)
-                c1.pyplot(fig2, use_container_width=True)  # display distribution
+            # Display rows with 2 columns
+            for i in range(len(df.columns)):
+                check_box_list.append(None)
 
-            for i in range(int(math.floor(len(df.columns) / 2)), len(df.columns)):
                 # create histogram chart
                 fig2 = sns.displot(data=df, x=df.columns[i], bins=30)
-                c2.pyplot(fig2, use_container_width=True)  # display distribution
+
+                # create 4 columns - checkbox, name, pie chart, distribution
+                c1, c2 = st.columns(column_widths)
+                check_box_list[i] = c1.checkbox(df.columns[i])
+
+                c2.pyplot(fig2, use_container_width=True)
+
+                ## Sort columns alphabetically if wanted - problem is the key might be in the middle of the df and you would want it at the start of the df
+                # df[sorted(df.columns)]
+
+        with pair_plots_expander:
+            ## If no boxes checked then display multi-select
+            if sum(check_box_list) == 0:
+                features = st.multiselect("Select features for pair plots", df.columns)
+            else:
+                features = df.columns[check_box_list]
+
+            if len(features) > 0:
+                # Create pair plot
+                fig3 = sns.pairplot(data=df, x_vars=features, y_vars=features)
+
+                # Display pair plot
+                st.pyplot(fig3, use_container_width=True)
