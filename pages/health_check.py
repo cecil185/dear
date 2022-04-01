@@ -98,7 +98,7 @@ def app():
                     # .style.highlight highlights cells in the selected columns which are null
                     st.dataframe(
                         df[null_rows].style.highlight_null(
-                            subset=features, null_color="yellow"
+                            subset=features, null_color="orange"
                         )
                     )
 

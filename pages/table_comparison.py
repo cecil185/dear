@@ -77,33 +77,65 @@ def app():
             for k in keys:
                 st.session_state.df_before['key']+=st.session_state.df_before[k].astype(str)
                 st.session_state.df_after['key']+=st.session_state.df_after[k].astype(str)
-            
-            #if unique combo is not unique there will be a problem
+
+            ## if unique combo is not unique there will be a problem ##
 
             #gets new and deleted rows
             list1=st.session_state.df_before['key']
             list2=st.session_state.df_after['key']
             new_rows_list, deleted_rows_list = getElementsNotSharedInLists(list1, list2)
-
-            st.write(new_rows_list)
-            st.write(deleted_rows_list)
             
             #gets new and deleted columns
             list1=st.session_state.df_before.columns
             list2=st.session_state.df_after.columns
             new_cols_list, deleted_cols_list = getElementsNotSharedInLists(list1, list2)
 
-            st.write(new_cols_list)
-            st.write(deleted_cols_list)
+            #set index to new columns 'key'
+            st.session_state.df_before = st.session_state.df_before.set_index('key')
+            st.session_state.df_after = st.session_state.df_after.set_index('key')
 
-        ## Three dividers ##
-        st.markdown("---")
+            st.markdown("---")
+            ## Three expanders ##
 
-        new_rows_expander = st.expander(label="New Rows", expanded=False)
-        #with new_rows_expander:
-            
-        deleted_rows_expander = st.expander(label="Deleted Rows", expanded=False)
-        #with deleted_rows_expander:
-            
-        changed_rows_expander = st.expander(label="Modified Rows", expanded=False)
+            new_rows_expander = st.expander(label="New Rows", expanded=False)
+            with new_rows_expander:
+                # show rows that were added to new dataset
+                st.dataframe(st.session_state.df_after.loc[new_rows_list, :])
 
+            deleted_rows_expander = st.expander(label="Deleted Rows", expanded=False)
+            with deleted_rows_expander:
+                # show rows that were deleted from original dataset
+                st.dataframe(st.session_state.df_before.loc[deleted_rows_list, :])
+                
+            changed_rows_expander = st.expander(label="Modified Rows", expanded=False)
+            with changed_rows_expander:
+                
+                #Copy dataframes excluded rows displayed in previous expanders
+                dfc_before = st.session_state.df_before.drop(deleted_rows_list, axis = 0)
+                dfc_after = st.session_state.df_after.drop(new_rows_list, axis = 0)
+                
+                #add new columns to dfc_before
+                for col in new_cols_list:
+                    dfc_before[col] = ''
+
+                #add deleted columns to dfc_after
+                for col in deleted_cols_list:
+                    dfc_after[col] = ''
+
+                #for each col in dfc_after add ~ before and after column name
+                for col in dfc_after.columns:
+                    dfc_after = dfc_after.rename(columns={col: "~"+col+"~"}, errors="raise")
+                st.write('After dataset column names are surrounded by "~" (ex. colname -> ~colname~)')
+
+                # dfc_both = join dfc_before and dfc_after
+                dfc_both = dfc_before.join(dfc_after, how = 'outer')
+
+                st.dataframe(dfc_both)
+
+                #iterate through each col in dfc_before rearrange and print
+
+                #count changes in each row
+
+                #sort by number of changes descending
+
+                #colour coding
