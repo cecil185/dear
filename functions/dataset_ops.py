@@ -20,6 +20,10 @@ def getColumnTypes(df):
 
     return ColumnType, Categorical, Numerical, Object
 
+def getElementsNotSharedInLists(list1, list2):
+    new_elements = list(set(list2) - set(list1))
+    deleted_elements = list(set(list1) - set(list2))
+    return new_elements, deleted_elements
 
 def getNumberNullsByCol(df):
     col = df.columns

@@ -98,7 +98,7 @@ def app():
                     # .style.highlight highlights cells in the selected columns which are null
                     st.dataframe(
                         df[null_rows].style.highlight_null(
-                            subset=features, null_color="yellow"
+                            subset=features, null_color="orange"
                         )
                     )
 
@@ -107,7 +107,7 @@ def app():
 
         # Multiselect for identifying keys
         keys_for_dups = st.sidebar.multiselect(
-            "Which columns are unique keys?", df.columns
+            "Which column(s) are unique keys?", df.columns
         )
         if len(keys_for_dups) > 0:
             st.sidebar.markdown(
