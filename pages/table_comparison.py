@@ -1,6 +1,8 @@
+import numpy as np
 import os
-import streamlit as st
 import pandas as pd
+import streamlit as st
+
 from functions.dataset_ops import getElementsNotSharedInLists
 
 def app():
@@ -114,28 +116,90 @@ def app():
                 dfc_before = st.session_state.df_before.drop(deleted_rows_list, axis = 0)
                 dfc_after = st.session_state.df_after.drop(new_rows_list, axis = 0)
                 
+                #These lists are for the combined data frame formatting
+                new_cols_list_tilda = []
+                deleted_cols_list_tilda = []
+
                 #add new columns to dfc_before
                 for col in new_cols_list:
                     dfc_before[col] = ''
+                    new_cols_list_tilda.append('~' + col + '~')
 
                 #add deleted columns to dfc_after
                 for col in deleted_cols_list:
                     dfc_after[col] = ''
+                    deleted_cols_list_tilda.append('~' + col + '~')
 
-                #for each col in dfc_after add ~ before and after column name
+                #Add '~' before and after column name in dfc_after
                 for col in dfc_after.columns:
                     dfc_after = dfc_after.rename(columns={col: "~"+col+"~"}, errors="raise")
+                
                 st.write('After dataset column names are surrounded by "~" (ex. colname -> ~colname~)')
 
                 # dfc_both = join dfc_before and dfc_after
                 dfc_both = dfc_before.join(dfc_after, how = 'outer')
 
-                st.dataframe(dfc_both)
-
-                #iterate through each col in dfc_before rearrange and print
-
                 #count changes in each row
+                dfc_count = 0
+                global dfc_is_changed
+                dfc_is_changed = dfc_both.copy()
+                final_display_col_names = []
 
-                #sort by number of changes descending
+                for col in dfc_before.columns:
+                    binary_column = np.logical_and(
+                        dfc_both[col] != dfc_both["~"+col+"~"]
+                        , np.logical_not(
+                            np.logical_and(
+                                dfc_both[col].isna()
+                                , dfc_both["~"+col+"~"].isna()
+                            )))
 
-                #colour coding
+                    dfc_is_changed[col] = binary_column * 1
+                    dfc_is_changed["~"+col+"~"] = binary_column * 1
+                    
+                    if col not in final_display_col_names:
+                        final_display_col_names.append(col)
+                    if "~"+col+"~" not in final_display_col_names:
+                        final_display_col_names.append("~"+col+"~")
+
+                    dfc_count += np.logical_and(
+                        dfc_both[col] != dfc_both["~"+col+"~"]
+                        , np.logical_not(
+                            np.logical_and(
+                                dfc_both[col].isna()
+                                , dfc_both["~"+col+"~"].isna()
+                            )))
+
+                dfc_both["change_count"] = dfc_count
+                dfc_both = dfc_both.sort_values(by=["change_count"], ascending=False)
+                
+                #position deleted and new columns at end of displayed data frame
+                for col in deleted_cols_list + new_cols_list:
+                    final_display_col_names.remove(col)
+                    final_display_col_names.remove('~' + col + '~')
+                    final_display_col_names.append(col)
+                    final_display_col_names.append('~' + col + '~')
+
+
+                dfc_both = dfc_both[final_display_col_names]
+                
+                color_mappings = []
+                for col in dfc_both.columns:
+
+                    if col in deleted_cols_list or col in deleted_cols_list_tilda:
+                        color_mappings.append("background: gray")
+                    elif col in new_cols_list or col in new_cols_list_tilda:
+                        color_mappings.append("background: green")
+                    else:
+                        color_mappings.append("background: red")
+
+                column_color_mappings = pd.Series(color_mappings, index = dfc_both.columns)
+
+                #iterate through each col in dfc_before rearrange and color code
+                st.dataframe(
+                    dfc_both.style.apply(
+                        lambda r: [column_color_mappings.loc[c] if dfc_is_changed.loc[r.name, c] == 1 else "" for c in r.index]
+                        , axis = 1
+                        )
+                )
+
