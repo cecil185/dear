@@ -114,7 +114,7 @@ def app():
                 # show rows that were deleted from original dataset
                 st.dataframe(st.session_state.df_before.loc[deleted_rows_list, :])
                 
-            changed_rows_expander = st.expander(label="Modified Rows", expanded=False)
+            changed_rows_expander = st.expander(label="Dataset comparison", expanded=True)
             with changed_rows_expander:
                 
                 #Copy dataframes excluded rows displayed in previous expanders
