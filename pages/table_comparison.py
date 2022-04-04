@@ -71,6 +71,11 @@ def app():
         # Multiselect for identifying keys
         keys = st.multiselect("Which column(s) are unique keys? (must be the same for both datasets)", st.session_state.df_after.columns)
         if len(keys) > 0:
+                
+            st.session_state.df_before = st.session_state.df_before.drop_duplicates(subset = keys)
+            st.session_state.df_after = st.session_state.df_after.drop_duplicates(subset = keys)
+            
+            
             #initialize key columns
             st.session_state.df_before['key']=''
             st.session_state.df_after['key']=''
