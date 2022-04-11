@@ -139,7 +139,7 @@ def app():
                 for col in dfc_after.columns:
                     dfc_after = dfc_after.rename(columns={col: "~"+col+"~"}, errors="raise")
                 
-                st.write('After dataset column names are surrounded by "~" (ex. colname -> ~colname~)')
+                st.write('After dataset column names are surrounded by "~"')
 
                 # dfc_both = join dfc_before and dfc_after
                 dfc_both = dfc_before.join(dfc_after, how = 'outer')
