@@ -3,12 +3,48 @@ import os
 import pandas as pd
 import streamlit as st
 
+from connection import create_session
+
 from functions.dataset_ops import getElementsNotSharedInLists
 
 def app():
 
     # Page title
-    st.markdown("### Compare tables before and after changes")
+    st.markdown("### Compare data models before and after changes")
+
+    # Call function to create new or get existing Snowpark session to connect to Snowflake
+    session = create_session()
+
+    session.use_warehouse('compute_wh')
+
+    snowflake_environment = session.sql('select current_user(), current_role(), current_database(), current_schema(), current_version(), current_warehouse()').collect()
+    st.session_state.snowflake_database_1 = st.session_state.snowflake_database_2 = snowflake_environment[0][2]
+    st.session_state.snowflake_schema_1 = st.session_state.snowflake_schema_2= snowflake_environment[0][3]
+    st.session_state.snowflake_model_1 = st.session_state.snowflake_model_2 = ""
+
+    def initialize_session_state(key, initial_value):
+        if key not in st.session_state:
+            st.session_state[key] = initial_value
+        else: return
+
+    initialize_session_state('snowflake_database_1', snowflake_environment[0][2])
+    initialize_session_state('snowflake_database_2', snowflake_environment[0][2])
+    initialize_session_state('snowflake_schema_1', snowflake_environment[0][3])
+    initialize_session_state('snowflake_schema_2', snowflake_environment[0][3])
+    initialize_session_state('snowflake_model_1', "")
+    initialize_session_state('snowflake_model_2', "")
+
+
+
+    st.markdown("""---""")
+
+    # Current Environment Details
+    st.write('Connection Successful')
+    st.write('User                        : {}'.format(snowflake_environment[0][0]))
+    st.write('Role                        : {}'.format(snowflake_environment[0][1]))
+    st.write('Warehouse                   : {}'.format(snowflake_environment[0][5]))
+
+    st.markdown("""---""")
 
     # Create before and after columns
     column_widths = [1, 1]
@@ -25,8 +61,29 @@ def app():
         st.session_state.df_before = None
     if 'df_after' not in st.session_state:
         st.session_state.df_after = None
+        
+    def handle_input(column, database_key, schema_key, model_key):
+        database_input = column.text_input("Database", placeholder=st.session_state[database_key], key=database_key)
+        if database_input and database_input != st.session_state[database_key]:
+            st.session_state[database_key] = database_input
 
-## Upload before data ##
+        schema_input = column.text_input("Schema", placeholder=st.session_state[schema_key], key=schema_key)
+        if schema_input and schema_input != st.session_state[schema_key]:
+            st.session_state[schema_key] = schema_input
+
+        model_input = column.text_input("Model", placeholder=st.session_state[model_key], key=model_key)
+        if model_input and model_input != st.session_state[model_key]:
+            st.session_state[model_key] = model_input
+            st.sidebar.write("Before: ", st.session_state[database_key], ".", st.session_state[schema_key], ".", st.session_state[model_key])
+
+    # Call the function for each column
+    handle_input(c1, 'snowflake_database_1', 'snowflake_schema_1', 'snowflake_model_1')
+    handle_input(c2, 'snowflake_database_2', 'snowflake_schema_2', 'snowflake_model_2')
+
+
+
+
+
     data_before = c1.file_uploader("Upload data before changes", type=["csv", "xlsx"])    
     global data1
     if data_before is not None:

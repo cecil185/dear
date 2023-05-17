@@ -38,3 +38,6 @@ def app():
 
         # Save uploaded CSV as file main_data.csv
         data.to_csv("data/main_data.csv", index=False)
+
+    if st.button("Connect to Snowflake"):
+        connect_to_snowflake()
