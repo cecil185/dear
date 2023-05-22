@@ -4,7 +4,7 @@ from functions import set_title
 # Custom imports
 from functions.multipage import MultiPage
 #Sort pages alphabetically
-from pages import null_check, table_comparison, upload_data, visualize_data
+from page import null_check, table_comparison, upload_data, visualize_data
 
 set_title.set()
 
