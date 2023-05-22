@@ -9,10 +9,10 @@ def getColumnTypes(df):
     Numerical = []
     for i in range(len(col)):
         if is_numeric_dtype(df[col[i]]):
-            ColumnType.append("Numerical")
+            ColumnType.append("Numeric")
             Numerical.append(col[i])
         elif is_string_dtype(df[col[i]]):
-            ColumnType.append("Categorical")
+            ColumnType.append("String")
             Categorical.append(col[i])
         else:
             ColumnType.append("Object")

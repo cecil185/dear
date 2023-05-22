@@ -4,7 +4,7 @@ from functions import set_title
 # Custom imports
 from functions.multipage import MultiPage
 #Sort pages alphabetically
-from pages import health_check, table_comparison, upload_data, visualize_data
+from pages import null_check, table_comparison, upload_data, visualize_data
 
 set_title.set()
 
@@ -14,7 +14,7 @@ app = MultiPage()
 # Add applications to navigation pane
 app.add_page("Table Comparison Before & After", table_comparison.app)
 app.add_page("Upload Data", upload_data.app)
-app.add_page("Health Check", health_check.app)
+app.add_page("Null Check", null_check.app)
 app.add_page("Visualize Data", visualize_data.app)
 
 # Triggers run for everything

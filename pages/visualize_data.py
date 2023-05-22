@@ -3,6 +3,7 @@ import seaborn as sns
 import streamlit as st
 import plotly.figure_factory as ff
 import pandas as pd
+import numpy as np
 
 
 def app():
@@ -28,7 +29,8 @@ def app():
         with corr_expander:
 
             # Can add mask to the correlation matrix later so only the bottom half shows
-            dfc = df.corr(method="pearson")
+            dfc = df.select_dtypes(include=[np.number])
+            dfc = dfc.corr(method="pearson")
             z = dfc.values.tolist()
 
             # change each element of z to type string for annotations
