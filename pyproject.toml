@@ -17,6 +17,7 @@ snowflake-snowpark-python = "^1.4.0"
 snowflake = "^0.0.3"
 uuid = "^1.30"
 python-dotenv = "^1.0.0"
+pyyaml = "^6.0"
 
 
 [build-system]
