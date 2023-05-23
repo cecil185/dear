@@ -17,14 +17,13 @@ def app():
     st.write("\n")
 
     # Code to read a single file
-    uploaded_file = st.file_uploader("Choose a file", type=["csv", "xlsx"])
+    uploaded_file = st.file_uploader("Choose a file", type=["csv", "xlsx",])
     global data
 
     if uploaded_file is not None:
         try:
             data = pd.read_csv(uploaded_file)
-        except Exception as e:
-            print(e)
+        except:
             data = pd.read_excel(uploaded_file)
 
         # Create text file with name of uploaded file
@@ -35,6 +34,10 @@ def app():
     if st.button("Load Data"):
         # Display uploaded CSV
         st.dataframe(data)
+        st.session_state["data"] = data
 
         # Save uploaded CSV as file main_data.csv
         data.to_csv("data/main_data.csv", index=False)
+
+    if st.button("Connect to Snowflake"):
+        connect_to_snowflake()

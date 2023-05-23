@@ -4,70 +4,49 @@ import pandas as pd
 import streamlit as st
 
 from functions.dataset_ops import getElementsNotSharedInLists
+from functions.utils import initialize_session_state, upload_data
+from functions.snowflake_connection import create_snowflake_session, get_snowflake_model, get_connection_details, write_connection_details
 
 def app():
 
     # Page title
-    st.markdown("### Compare tables before and after changes")
+    st.markdown("### Compare data models before and after changes")
+
+    # Call function to create new or get existing Snowpark session to connect to Snowflake
+    session = create_snowflake_session()
+
+    # initialize_session_state('snowflake_database_1', get_connection_details(session, 'current_database()'))
+    # initialize_session_state('snowflake_database_2', get_connection_details(session, 'current_database()'))
+    # initialize_session_state('snowflake_schema_1', get_connection_details(session, 'current_schema()'))
+    # initialize_session_state('snowflake_schema_2', get_connection_details(session, 'current_schema()'))
+    # initialize_session_state('snowflake_model_1', "")
+    # initialize_session_state('snowflake_model_2', "")
+
+    write_connection_details(session)
 
     # Create before and after columns
     column_widths = [1, 1]
     c1, c2 = st.columns(column_widths)
     c1.subheader("Before")
     c2.subheader("After")
+    
 
-    # If flags are already initialized, don't do anything
-    if 'f1' not in st.session_state:
-        st.session_state.f1 = False
-    if 'f2' not in st.session_state:
-        st.session_state.f2 = False
-    if 'df_before' not in st.session_state:
-        st.session_state.df_before = None
-    if 'df_after' not in st.session_state:
-        st.session_state.df_after = None
+    data_source_type_1 = c1.selectbox("Data Source", ["Upload File", "Snowflake Connection"], key = 'c1_selectbox')
 
-## Upload before data ##
-    data_before = c1.file_uploader("Upload data before changes", type=["csv", "xlsx"])    
-    global data1
-    if data_before is not None:
-        try:
-            data1 = pd.read_csv(data_before)
-        except Exception as e:
-            print(e)
-            data1 = pd.read_excel(data_before)
-
-    if c1.button("Load Before Data"):
-        if data_before is None:
-            c1.markdown("Please select a file to upload first")
-        else:
-            # Save uploaded CSV as dataframe
-            st.session_state.df_before = data1
-            c1.markdown("Load Complete")
-            st.session_state.f1=True
-        
-
-## Upload after data ##
-    data_after = c2.file_uploader("Upload data after changes", type=["csv", "xlsx"])    
-    global data2
-    if data_after is not None:
-        try:
-            data2 = pd.read_csv(data_after)
-        except Exception as e:
-            print(e)
-            data2 = pd.read_excel(data_after)
+    if data_source_type_1 == "Upload File":
+        upload_data(file_uploader_key='1', container=c1, session_state_key='df_before')
+    elif data_source_type_1 == "Snowflake Connection":
+        get_snowflake_model(session, c1, 'snowflake_database_1', 'snowflake_schema_1', 'snowflake_model_1', 'table comparison c1', 'df_before')
 
 
-    if c2.button("Load After Data"):
-        if data_after is None:
-            c2.markdown("Please select a file to upload first")
-        else:
-            # Save uploaded CSV as dataframe
-            st.session_state.df_after = data2
-            c2.markdown("Load Complete")
-            st.session_state.f2=True
+    data_source_type_2 = c2.selectbox("Data Source", ["Upload File", "Snowflake Connection"], key = 'c2_selectbox')
 
+    if data_source_type_2 == "Upload File":
+        upload_data(file_uploader_key='2', container=c2, session_state_key='df_after')
+    elif data_source_type_2 == "Snowflake Connection":
+        get_snowflake_model(session, c2, 'snowflake_database_2', 'snowflake_schema_2', 'snowflake_model_2', 'table comparison c2', 'df_after')
 
-    if st.session_state.f1 and st.session_state.f2:
+    if 'df_before' in st.session_state and 'df_after' in st.session_state:
         # Multiselect for identifying keys
         keys = st.multiselect("Which column(s) are unique keys? (must be the same for both datasets)", st.session_state.df_after.columns)
         if len(keys) > 0:
