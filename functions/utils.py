@@ -1,5 +1,8 @@
 from pathlib import Path
+import os
+import pandas as pd
 import snowflake.connector
+import streamlit as st
 from typing import Dict
 from yaml import load, SafeLoader
 
@@ -68,3 +71,23 @@ def create_snowflake_connector(dbt_profile):
     )
 
     return ctx
+
+def initialize_session_state(key, initial_value):
+        if key not in st.session_state:
+            st.session_state[key] = initial_value
+        else: return
+
+
+def upload_data(file_uploader_key, container, session_state_key = "data"):
+    uploaded_file = container.file_uploader("Choose a file", type=["csv", "xlsx",], key=file_uploader_key)
+    
+    if uploaded_file is not None:
+        file_details = os.path.splitext(uploaded_file.name)
+        
+        # Check the file extension and then load data accordingly
+        if file_details[1] == '.csv':
+            data = pd.read_csv(uploaded_file)
+        elif file_details[1] == '.xlsx':
+            data = pd.read_excel(uploaded_file)
+        
+        st.session_state[session_state_key] = data
